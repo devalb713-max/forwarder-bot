@@ -74,7 +74,10 @@ export async function isAdmin(userId, username) {
   const id = userId?.toString();
   const query = [];
   if (id) query.push({ userId: id });
-  if (username) query.push({ username: username.replace(/^@/, "") });
+  if (username) {
+    // Telegraf gives username without @; we store it with @
+    query.push({ username: "@" + username.replace(/^@/, "") });
+  }
   if (!query.length) return false;
   const admin = await Admin.findOne({ $or: query });
   return !!admin;
@@ -575,31 +578,26 @@ export async function handleText(ctx) {
     const input = text.trim();
     clearSession(userId);
 
-    let targetId = null;
-    let targetUsername = null;
-
+    let newAdmin;
     if (/^\d+$/.test(input)) {
-      targetId = input;
+      newAdmin = { userId: input, username: null };
     } else {
-      targetUsername = input.replace(/^@/, "");
-    }
-
-    if (!targetId && !targetUsername) {
-      return ctx.reply(s.adminAddFail, { parse_mode: "Markdown" });
+      const uname = "@" + input.replace(/^@/, "");
+      newAdmin = { userId: null, username: uname };
     }
 
     const existing = await Admin.findOne({
       $or: [
-        ...(targetId ? [{ userId: targetId }] : []),
-        ...(targetUsername ? [{ username: targetUsername }] : []),
+        ...(newAdmin.userId ? [{ userId: newAdmin.userId }] : []),
+        ...(newAdmin.username ? [{ username: newAdmin.username }] : []),
       ],
     });
     if (existing) {
       return ctx.reply(s.adminAlreadyExists, { parse_mode: "Markdown" });
     }
 
-    await Admin.create({ userId: targetId, username: targetUsername });
-    return ctx.reply(s.adminAdded(targetId, targetUsername), {
+    await Admin.create(newAdmin);
+    return ctx.reply(s.adminAdded(newAdmin.userId, newAdmin.username), {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: [[{ text: s.btnBack, callback_data: "back_main" }]] },
     });
