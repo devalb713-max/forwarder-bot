@@ -582,7 +582,7 @@ export async function handleText(ctx) {
     if (/^\d+$/.test(input)) {
       newAdmin = { userId: input, username: null };
     } else {
-      const uname = "@" + input.replace(/^@/, "");
+      const uname = input.startsWith("@") ? input : "@" + input;
       newAdmin = { userId: null, username: uname };
     }
 
