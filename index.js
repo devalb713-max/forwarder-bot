@@ -49,6 +49,12 @@ app.listen(PORT, () => console.log(`🌐 Server running on port ${PORT}`));
 const bot = new Telegraf(process.env.BOT_TOKEN);
 global.bot = bot;
 
+bot.catch((err, ctx) => {
+  const msg = err && err.message || "";
+  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM") || msg.includes("409")) return;
+  console.error("[bot.catch] Update " + (ctx && ctx.update && ctx.update.update_id) + ":", err.message);
+});
+
 // ── Admin guard middleware ────────────────────────────────────────────────────
 bot.use(async (ctx, next) => {
   const userId = ctx.from?.id;
@@ -167,13 +173,13 @@ main().catch((e) => {
 
 process.on("unhandledRejection", (reason) => {
   const msg = reason?.message || reason?.toString() || "";
-  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM") || msg.includes("409")) return;
+  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM")) return;
   console.error("⚠️ Unhandled Rejection:", reason);
 });
 
 process.on("uncaughtException", (error) => {
   const msg = error?.message || "";
-  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM") || msg.includes("409")) return;
+  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM")) return;
   console.error("⚠️ Uncaught Exception:", error);
 
   try {
