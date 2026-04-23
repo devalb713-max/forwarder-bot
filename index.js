@@ -167,13 +167,13 @@ main().catch((e) => {
 
 process.on("unhandledRejection", (reason) => {
   const msg = reason?.message || reason?.toString() || "";
-  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM")) return;
+  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM") || msg.includes("409")) return;
   console.error("⚠️ Unhandled Rejection:", reason);
 });
 
 process.on("uncaughtException", (error) => {
   const msg = error?.message || "";
-  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM")) return;
+  if (msg.includes("TIMEOUT") || msg.includes("ETELEGRAM") || msg.includes("409")) return;
   console.error("⚠️ Uncaught Exception:", error);
 
   try {
