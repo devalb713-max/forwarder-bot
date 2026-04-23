@@ -99,6 +99,7 @@ function mainKeyboard(s, isForwarding) {
       isForwarding
         ? [{ text: s.btnStopForwarding, callback_data: "stop_forwarding" }]
         : [{ text: s.btnStartForwarding, callback_data: "start_forwarding" }],
+      [{ text: s.btnAddAdmin, callback_data: "add_admin" }],
       [{ text: s.btnLanguage, callback_data: "toggle_language" }],
     ],
   };
@@ -415,6 +416,23 @@ export async function handleToggleLanguage(ctx) {
   await handleStart(ctx);
 }
 
+// ─── Add Admin ────────────────────────────────────────────────────────────────
+
+export async function handleAddAdmin(ctx) {
+  const { s } = await getLangStrings(ctx);
+  setSession(ctx.from.id, { step: "awaiting_admin_input" });
+  await ctx.answerCbQuery?.();
+  await ctx.reply(s.addAdminPrompt, {
+    parse_mode: "Markdown",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: s.btnBack, callback_data: "back_main" }],
+        [{ text: "❌ Cancel", callback_data: "cancel" }],
+      ],
+    },
+  });
+}
+
 // ─── Text Message Handler (multi-step router) ─────────────────────────────────
 
 export async function handleText(ctx) {
@@ -547,6 +565,43 @@ export async function handleText(ctx) {
 
     await applyInterval(ctx, ms, s, lang);
     return;
+  }
+
+  // ── Add admin step ───────────────────────────────────────────────────────
+  if (session.step === "awaiting_admin_input") {
+    const input = text.trim();
+    clearSession(userId);
+
+    let targetId = null;
+    let targetUsername = null;
+
+    if (/^\d+$/.test(input)) {
+      targetId = input;
+    } else {
+      const usernameArg = input.startsWith("@") ? input : `@${input}`;
+      try {
+        const chat = await ctx.telegram.getChat(usernameArg);
+        targetId = chat.id?.toString();
+        targetUsername = chat.username || null;
+      } catch {
+        return ctx.reply(s.adminAddFail, { parse_mode: "Markdown" });
+      }
+    }
+
+    if (!targetId) {
+      return ctx.reply(s.adminAddFail, { parse_mode: "Markdown" });
+    }
+
+    const existing = await Admin.findOne({ userId: targetId });
+    if (existing) {
+      return ctx.reply(s.adminAlreadyExists, { parse_mode: "Markdown" });
+    }
+
+    await Admin.create({ userId: targetId, username: targetUsername });
+    return ctx.reply(s.adminAdded(targetId, targetUsername), {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: [[{ text: s.btnBack, callback_data: "back_main" }]] },
+    });
   }
 
   // ── Bulk password step (mid-batch) ───────────────────────────────────────

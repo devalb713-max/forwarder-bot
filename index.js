@@ -32,6 +32,7 @@ import {
   handleAudio,
   handleBulkCode,
   handleCancel,
+  handleAddAdmin,
 } from "./handlers.js";
 import { strings } from "./i18n.js";
 
@@ -96,6 +97,7 @@ bot.action(/^confirm_interval:(\d+)$/, handleConfirmInterval);
 bot.action("start_forwarding", handleStartForwarding);
 bot.action("stop_forwarding", handleStopForwarding);
 bot.action("toggle_language", handleToggleLanguage);
+bot.action("add_admin", handleAddAdmin);
 bot.action(/^logout:(.+)$/, handleLogout);
 
 // ─── Message Handlers ─────────────────────────────────────────────────────────

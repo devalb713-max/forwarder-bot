@@ -16,8 +16,21 @@ export const strings = {
     btnSetInterval: "⏱ Set Interval",
     btnStartForwarding: "▶️ Start Forwarding",
     btnStopForwarding: "⏹ Stop Forwarding",
+    btnAddAdmin: "👤 Add Admin",
     btnLanguage: "🌐 Language: EN",
     btnBack: "« Back",
+
+    addAdminPrompt:
+      `👤 *Add New Admin*\n\n` +
+      `Send me the user's *Telegram ID* (numeric) or *@username*.\n\n` +
+      `Examples:\n` +
+      `• \`123456789\`\n` +
+      `• \`@johndoe\`\n\n` +
+      `⚠️ If adding by username, the user must have previously started this bot.`,
+    adminAdded: (id, username) =>
+      `✅ Admin added!\n\nID: \`${id}\`${username ? `\nUsername: @${username}` : ""}`,
+    adminAlreadyExists: "⚠️ That user is already an admin.",
+    adminAddFail: "❌ Could not find that user. If using a username, the user must start the bot first so Telegram can resolve their ID.",
 
     addAccountPrompt: "📱 Send me the phone number (with country code).\nExample: +919876543210",
     sendCodeSent: (phone) => `📨 OTP sent to *${phone}*. Please enter the code:`,
@@ -77,6 +90,8 @@ export const strings = {
     setIntervalPrompt: "⏱ *Set Forwarding Interval*\n\nHow often should messages be sent? Pick one or type a custom value in minutes:",
     intervalSet: (label) => `✅ Interval set to *${label}*`,
     intervalOptions: [
+      { label: "Every 1 min", ms: 1 * 60 * 1000 },
+      { label: "Every 2 min", ms: 2 * 60 * 1000 },
       { label: "Every 5 min", ms: 5 * 60 * 1000 },
       { label: "Every 10 min", ms: 10 * 60 * 1000 },
       { label: "Every 30 min", ms: 30 * 60 * 1000 },
@@ -84,7 +99,7 @@ export const strings = {
       { label: "Every 3 hours", ms: 3 * 60 * 60 * 1000 },
       { label: "Every 6 hours", ms: 6 * 60 * 60 * 1000 },
     ],
-    customIntervalPrompt: "⌨️ Type the interval in minutes (e.g. `15` for every 15 minutes):",
+    customIntervalPrompt: "⌨️ Type the interval in minutes (e.g. `2` for every 2 minutes):",
     invalidInterval: "❌ Invalid number. Please send a valid number of minutes.",
 
     forwardingStarted: "▶️ *Forwarding started!*\nMessages will now be sent on the configured interval.",
@@ -125,8 +140,21 @@ export const strings = {
     btnSetInterval: "⏱ Interval Set Karo",
     btnStartForwarding: "▶️ Forwarding Shuru Karo",
     btnStopForwarding: "⏹ Forwarding Band Karo",
+    btnAddAdmin: "👤 Admin Add Karo",
     btnLanguage: "🌐 Bhasha: HI",
     btnBack: "« Wapas",
+
+    addAdminPrompt:
+      `👤 *Naya Admin Add Karo*\n\n` +
+      `User ka *Telegram ID* (number) ya *@username* bhejo.\n\n` +
+      `Examples:\n` +
+      `• \`123456789\`\n` +
+      `• \`@johndoe\`\n\n` +
+      `⚠️ Agar username se add kar rahe ho, toh user ne pehle is bot ko start kiya hona chahiye.`,
+    adminAdded: (id, username) =>
+      `✅ Admin add ho gaya!\n\nID: \`${id}\`${username ? `\nUsername: @${username}` : ""}`,
+    adminAlreadyExists: "⚠️ Yeh user pehle se hi admin hai.",
+    adminAddFail: "❌ Yeh user nahi mila. Username se add karte waqt, user ko pehle bot start karna hoga taaki Telegram unka ID resolve kar sake.",
 
     addAccountPrompt: "📱 Phone number bhejo (country code ke saath).\nExample: +919876543210",
     sendCodeSent: (phone) => `📨 OTP bheja gaya *${phone}* par. Code daalo:`,
@@ -186,6 +214,8 @@ export const strings = {
     setIntervalPrompt: "⏱ *Forwarding Interval Set Karo*\n\nKitni der baad message bhejne chahiye? Neeche se chuno ya khud minutes mein type karo:",
     intervalSet: (label) => `✅ Interval set ho gaya: *${label}*`,
     intervalOptions: [
+      { label: "Har 1 min", ms: 1 * 60 * 1000 },
+      { label: "Har 2 min", ms: 2 * 60 * 1000 },
       { label: "Har 5 min", ms: 5 * 60 * 1000 },
       { label: "Har 10 min", ms: 10 * 60 * 1000 },
       { label: "Har 30 min", ms: 30 * 60 * 1000 },
@@ -193,7 +223,7 @@ export const strings = {
       { label: "Har 3 ghante", ms: 3 * 60 * 60 * 1000 },
       { label: "Har 6 ghante", ms: 6 * 60 * 60 * 1000 },
     ],
-    customIntervalPrompt: "⌨️ Minutes mein number type karo (e.g. `15` matlab har 15 minute):",
+    customIntervalPrompt: "⌨️ Minutes mein number type karo (e.g. `2` matlab har 2 minute):",
     invalidInterval: "❌ Galat number. Sahi minutes ka number daalo.",
 
     forwardingStarted: "▶️ *Forwarding shuru ho gayi!*\nMessages configured interval par bheje jaayenge.",
