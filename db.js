@@ -25,8 +25,8 @@ export const Account = mongoose.model("Account", accountSchema);
 // Admin Schema (seeded)
 const adminSchema = new mongoose.Schema(
   {
-    userId: { type: String, default: null, sparse: true },
-    username: { type: String, default: null, sparse: true },
+    userId: { type: String, default: null, unique: true, sparse: true },
+    username: { type: String, default: null, unique: true, sparse: true },
   },
   { timestamps: true }
 );
