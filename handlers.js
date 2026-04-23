@@ -582,14 +582,6 @@ export async function handleText(ctx) {
       if (ctx.from.username && ctx.from.username.toLowerCase() === usernameArg.toLowerCase()) {
         targetId = ctx.from.id.toString();
         targetUsername = ctx.from.username;
-      } else {
-        try {
-          const chat = await ctx.telegram.getChat(`@${usernameArg}`);
-          targetId = chat.id?.toString();
-          targetUsername = chat.username || null;
-        } catch {
-          return ctx.reply(s.adminAddFail, { parse_mode: "Markdown" });
-        }
       }
     }
 
