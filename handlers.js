@@ -70,10 +70,13 @@ function riskConfirmKeyboard(ms, lang) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export async function isAdmin(userId) {
+export async function isAdmin(userId, username) {
   const id = userId?.toString();
-  if (!id) return false;
-  const admin = await Admin.findOne({ userId: id });
+  const query = [];
+  if (id) query.push({ userId: id });
+  if (username) query.push({ username: username.replace(/^@/, "") });
+  if (!query.length) return false;
+  const admin = await Admin.findOne({ $or: query });
   return !!admin;
 }
 
@@ -578,18 +581,19 @@ export async function handleText(ctx) {
     if (/^\d+$/.test(input)) {
       targetId = input;
     } else {
-      const usernameArg = input.startsWith("@") ? input.slice(1) : input;
-      if (ctx.from.username && ctx.from.username.toLowerCase() === usernameArg.toLowerCase()) {
-        targetId = ctx.from.id.toString();
-        targetUsername = ctx.from.username;
-      }
+      targetUsername = input.replace(/^@/, "");
     }
 
-    if (!targetId) {
+    if (!targetId && !targetUsername) {
       return ctx.reply(s.adminAddFail, { parse_mode: "Markdown" });
     }
 
-    const existing = await Admin.findOne({ userId: targetId });
+    const existing = await Admin.findOne({
+      $or: [
+        ...(targetId ? [{ userId: targetId }] : []),
+        ...(targetUsername ? [{ username: targetUsername }] : []),
+      ],
+    });
     if (existing) {
       return ctx.reply(s.adminAlreadyExists, { parse_mode: "Markdown" });
     }

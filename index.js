@@ -54,7 +54,7 @@ bot.use(async (ctx, next) => {
   const userId = ctx.from?.id;
   if (!userId) return;
 
-  const allowed = await isAdmin(userId);
+  const allowed = await isAdmin(userId, ctx.from?.username);
   if (!allowed) {
     let lang = "en";
     try {
