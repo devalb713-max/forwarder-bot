@@ -17,6 +17,7 @@ export const strings = {
     btnStartForwarding: "▶️ Start Forwarding",
     btnStopForwarding: "⏹ Stop Forwarding",
     btnAddAdmin: "👤 Add Admin",
+    btnRemoveAdmin: "🗑 Remove Admin",
     btnLanguage: "🌐 Language: EN",
     btnBack: "« Back",
 
@@ -31,6 +32,14 @@ export const strings = {
       `✅ Admin added!\n\nID: \`${id}\`${username ? `\nUsername: @${username}` : ""}`,
     adminAlreadyExists: "⚠️ That user is already an admin.",
     adminAddFail: "❌ Could not find that user. If using a username, the user must start the bot first so Telegram can resolve their ID.",
+
+    removeAdminListHeader: "🗑 *Remove Admin*\n\nSelect an admin to remove:",
+    noRemovableAdmins: "ℹ️ No removable admins found. Super admins cannot be removed.",
+    removeAdminConfirmPrompt: (label) =>
+      `⚠️ *Are you sure you want to remove* ${label} *as admin?*\n\nThis cannot be undone.`,
+    btnConfirmRemove: "✅ Yes, remove",
+    adminRemoved: (label) => `✅ Admin *${label}* has been removed.`,
+    notSuperAdmin: "🚫 Only super admins can remove admins.",
 
     addAccountPrompt: "📱 Send me the phone number (with country code).\nExample: +919876543210",
     sendCodeSent: (phone) => `📨 OTP sent to *${phone}*. Please enter the code:`,
@@ -141,6 +150,7 @@ export const strings = {
     btnStartForwarding: "▶️ Forwarding Shuru Karo",
     btnStopForwarding: "⏹ Forwarding Band Karo",
     btnAddAdmin: "👤 Admin Add Karo",
+    btnRemoveAdmin: "🗑 Admin Hatao",
     btnLanguage: "🌐 Bhasha: HI",
     btnBack: "« Wapas",
 
@@ -155,6 +165,14 @@ export const strings = {
       `✅ Admin add ho gaya!\n\nID: \`${id}\`${username ? `\nUsername: @${username}` : ""}`,
     adminAlreadyExists: "⚠️ Yeh user pehle se hi admin hai.",
     adminAddFail: "❌ Yeh user nahi mila. Username se add karte waqt, user ko pehle bot start karna hoga taaki Telegram unka ID resolve kar sake.",
+
+    removeAdminListHeader: "🗑 *Admin Hatao*\n\nKonsa admin hatana hai? Chunna:",
+    noRemovableAdmins: "ℹ️ Koi hatane wala admin nahi mila. Super admins ko nahi hataya ja sakta.",
+    removeAdminConfirmPrompt: (label) =>
+      `⚠️ *Kya tum sure ho ki* ${label} *ko admin se hatana chahte ho?*\n\nYeh wapas nahi ho sakta.`,
+    btnConfirmRemove: "✅ Haan, hatao",
+    adminRemoved: (label) => `✅ Admin *${label}* hata diya gaya.`,
+    notSuperAdmin: "🚫 Sirf super admins hi admins ko hata sakte hain.",
 
     addAccountPrompt: "📱 Phone number bhejo (country code ke saath).\nExample: +919876543210",
     sendCodeSent: (phone) => `📨 OTP bheja gaya *${phone}* par. Code daalo:`,

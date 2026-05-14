@@ -33,6 +33,9 @@ import {
   handleBulkCode,
   handleCancel,
   handleAddAdmin,
+  handleRemoveAdmin,
+  handleRemoveAdminSelect,
+  handleRemoveAdminDo,
 } from "./handlers.js";
 import { strings } from "./i18n.js";
 
@@ -104,6 +107,9 @@ bot.action("start_forwarding", handleStartForwarding);
 bot.action("stop_forwarding", handleStopForwarding);
 bot.action("toggle_language", handleToggleLanguage);
 bot.action("add_admin", handleAddAdmin);
+bot.action("remove_admin", handleRemoveAdmin);
+bot.action(/^remove_admin_select:(.+)$/, handleRemoveAdminSelect);
+bot.action(/^remove_admin_do:(.+)$/, handleRemoveAdminDo);
 bot.action(/^logout:(.+)$/, handleLogout);
 
 // ─── Message Handlers ─────────────────────────────────────────────────────────

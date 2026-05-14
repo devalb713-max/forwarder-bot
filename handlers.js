@@ -6,6 +6,16 @@ import { getSession, setSession, clearSession } from "./sessions.js";
 import { startForwarding, stopForwarding, isForwardingActive, restartForwardingWithNewInterval } from "./forwarder.js";
 import fetch from "node-fetch";
 
+// ─── Super admin IDs (cannot be removed) ─────────────────────────────────────
+
+const SUPER_ADMIN_IDS = (process.env.SUPER_ADMIN_IDS || "8486646787,1632962204")
+  .split(",")
+  .map((id) => id.trim());
+
+export function isSuperAdmin(userId) {
+  return SUPER_ADMIN_IDS.includes(userId?.toString());
+}
+
 // ─── Risk thresholds ──────────────────────────────────────────────────────────
 // < 5 min  → high risk (red warning, strong language)
 // 5–9 min  → moderate risk (yellow warning, softer)
@@ -95,20 +105,20 @@ async function getLangStrings(ctx) {
   return { s: strings[lang], lang };
 }
 
-function mainKeyboard(s, isForwarding) {
-  return {
-    inline_keyboard: [
-      [{ text: s.btnAddAccount, callback_data: "add_account" }, { text: s.btnBulkLogin, callback_data: "bulk_login" }],
-      [{ text: s.btnViewAccounts, callback_data: "view_accounts" }],
-      [{ text: s.btnSetMessage, callback_data: "set_message" }, { text: s.btnJoinGroups, callback_data: "join_groups_info" }],
-      [{ text: s.btnSetInterval, callback_data: "set_interval" }],
-      isForwarding
-        ? [{ text: s.btnStopForwarding, callback_data: "stop_forwarding" }]
-        : [{ text: s.btnStartForwarding, callback_data: "start_forwarding" }],
-      [{ text: s.btnAddAdmin, callback_data: "add_admin" }],
-      [{ text: s.btnLanguage, callback_data: "toggle_language" }],
-    ],
-  };
+function mainKeyboard(s, isForwarding, superAdmin = false) {
+  const rows = [
+    [{ text: s.btnAddAccount, callback_data: "add_account" }, { text: s.btnBulkLogin, callback_data: "bulk_login" }],
+    [{ text: s.btnViewAccounts, callback_data: "view_accounts" }],
+    [{ text: s.btnSetMessage, callback_data: "set_message" }, { text: s.btnJoinGroups, callback_data: "join_groups_info" }],
+    [{ text: s.btnSetInterval, callback_data: "set_interval" }],
+    isForwarding
+      ? [{ text: s.btnStopForwarding, callback_data: "stop_forwarding" }]
+      : [{ text: s.btnStartForwarding, callback_data: "start_forwarding" }],
+    [{ text: s.btnAddAdmin, callback_data: "add_admin" }],
+  ];
+  if (superAdmin) rows.push([{ text: s.btnRemoveAdmin, callback_data: "remove_admin" }]);
+  rows.push([{ text: s.btnLanguage, callback_data: "toggle_language" }]);
+  return { inline_keyboard: rows };
 }
 
 // ─── Apply interval (shared by preset, custom, and confirm paths) ─────────────
@@ -147,7 +157,7 @@ export async function handleCancel(ctx) {
 
   await ctx.reply(s.cancelled, {
     parse_mode: "Markdown",
-    reply_markup: mainKeyboard(s, isForwardingActive()),
+    reply_markup: mainKeyboard(s, isForwardingActive(), isSuperAdmin(ctx.from?.id)),
   });
 }
 
@@ -160,9 +170,10 @@ export async function handleStart(ctx) {
     const accountCount = await Account.countDocuments({ banned: false, frozen: false });
     const messageSet = !!(sys.message?.text || sys.message?.fileId);
     const forwarding = isForwardingActive();
+    const superAdmin = isSuperAdmin(ctx.from?.id);
 
     const text = s.welcome(forwarding, messageSet, accountCount);
-    const reply_markup = mainKeyboard(s, forwarding);
+    const reply_markup = mainKeyboard(s, forwarding, superAdmin);
 
     if (ctx.callbackQuery) {
       try {
@@ -386,7 +397,7 @@ export async function handleStartForwarding(ctx) {
 
   await ctx.reply(s.forwardingStarted, {
     parse_mode: "Markdown",
-    reply_markup: mainKeyboard(s, true),
+    reply_markup: mainKeyboard(s, true, isSuperAdmin(ctx.from?.id)),
   });
 }
 
@@ -405,7 +416,7 @@ export async function handleStopForwarding(ctx) {
 
   await ctx.reply(s.forwardingStopped, {
     parse_mode: "Markdown",
-    reply_markup: mainKeyboard(s, false),
+    reply_markup: mainKeyboard(s, false, isSuperAdmin(ctx.from?.id)),
   });
 }
 
@@ -852,6 +863,98 @@ export async function handleBulkCode(ctx, session, s) {
   clearSession(ctx.from.id);
   await ctx.reply(`❌ ${phone}: ${result.error}`);
   await _processBulkRows(ctx, remainingRows, s);
+}
+
+// ─── Remove Admin ─────────────────────────────────────────────────────────────
+
+export async function handleRemoveAdmin(ctx) {
+  const { s } = await getLangStrings(ctx);
+  if (!isSuperAdmin(ctx.from?.id)) {
+    if (ctx.callbackQuery) await ctx.answerCbQuery(s.notSuperAdmin);
+    else await ctx.reply(s.notSuperAdmin, { parse_mode: "Markdown" });
+    return;
+  }
+  await ctx.answerCbQuery?.();
+
+  const allAdmins = await Admin.find({});
+  const removable = allAdmins.filter((a) => !isSuperAdmin(a.userId));
+
+  if (!removable.length) {
+    return ctx.reply(s.noRemovableAdmins, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: [[{ text: s.btnBack, callback_data: "back_main" }]] },
+    });
+  }
+
+  const buttons = removable.map((a) => {
+    const label = a.username ? a.username.replace(/^@/, "@") : `ID: ${a.userId}`;
+    return [{ text: `🗑 ${label}`, callback_data: `remove_admin_select:${a._id}` }];
+  });
+  buttons.push([{ text: s.btnBack, callback_data: "back_main" }]);
+
+  await ctx.reply(s.removeAdminListHeader, {
+    parse_mode: "Markdown",
+    reply_markup: { inline_keyboard: buttons },
+  });
+}
+
+export async function handleRemoveAdminSelect(ctx) {
+  const { s } = await getLangStrings(ctx);
+  if (!isSuperAdmin(ctx.from?.id)) {
+    await ctx.answerCbQuery(s.notSuperAdmin);
+    return;
+  }
+  await ctx.answerCbQuery();
+
+  const adminDocId = ctx.match[1];
+  const admin = await Admin.findById(adminDocId);
+  if (!admin) {
+    return ctx.reply("❌ Admin not found.", { parse_mode: "Markdown" });
+  }
+
+  const label = admin.username
+    ? `@${admin.username.replace(/^@/, "")}`
+    : `\`${admin.userId}\``;
+
+  await ctx.reply(s.removeAdminConfirmPrompt(label), {
+    parse_mode: "Markdown",
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: s.btnConfirmRemove, callback_data: `remove_admin_do:${adminDocId}` }],
+        [{ text: s.btnBack, callback_data: "remove_admin" }],
+      ],
+    },
+  });
+}
+
+export async function handleRemoveAdminDo(ctx) {
+  const { s } = await getLangStrings(ctx);
+  if (!isSuperAdmin(ctx.from?.id)) {
+    await ctx.answerCbQuery(s.notSuperAdmin);
+    return;
+  }
+  await ctx.answerCbQuery();
+
+  const adminDocId = ctx.match[1];
+  const admin = await Admin.findById(adminDocId);
+
+  if (!admin) {
+    return ctx.reply("❌ Admin not found.", { parse_mode: "Markdown" });
+  }
+
+  if (isSuperAdmin(admin.userId)) {
+    return ctx.reply("🚫 Super admins cannot be removed.", { parse_mode: "Markdown" });
+  }
+
+  await Admin.findByIdAndDelete(adminDocId);
+  const label = admin.username
+    ? `@${admin.username.replace(/^@/, "")}`
+    : admin.userId;
+
+  await ctx.reply(s.adminRemoved(label), {
+    parse_mode: "Markdown",
+    reply_markup: { inline_keyboard: [[{ text: s.btnBack, callback_data: "back_main" }]] },
+  });
 }
 
 // ─── Save account to DB ───────────────────────────────────────────────────────
